@@ -4,20 +4,35 @@ from collections import defaultdict
 
 
 def bfs(graph: dict[str, set], start) -> tuple[dict, dict]:
-    queue = collections.deque([start])
+    queue = [start]
     dist = {start: 0}
     prev_v = {start: None}
+    first_step = {}
 
     while queue:
-        size = len(queue)
-        nodes = [queue.popleft() for _ in range(size)]
-        nodes.sort()
-        for v in nodes:
-            for u in sorted(graph.get(v, [])):
+        l = sorted(queue)
+        queue.clear()
+
+        for v in l:
+            for u in sorted(graph.get(v)):
+                n_dist = dist[v] + 1
                 if u not in dist:
-                    dist[u] = dist[v] + 1
+                    dist[u] = n_dist
                     prev_v[u] = v
+                    if v == start:
+                        first_step[u] = u
+                    else:
+                        first_step[u] = first_step[v]
                     queue.append(u)
+                elif n_dist == dist[u]:
+                    if v == start:
+                        n_first = u
+                    else:
+                        n_first = first_step[v]
+                    cur_first = first_step[u]
+                    if n_first < cur_first or (n_first == cur_first and v < prev_v[u]):
+                        prev_v[u] = v
+                        first_step[u] = n_first
 
     return dist, prev_v
 
