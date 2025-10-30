@@ -47,6 +47,18 @@ def get_gateway_and_prev(graph: dict[str, set], virus: str):
     return gateway, prev
 
 
+def is_safe(graph: dict[str, set], virus: str, v: str, u: str) -> bool:
+    graph[v].remove(u)
+    graph[u].remove(v)
+
+    edge = get_gateway_and_prev(graph, virus)
+    if edge is None:
+        return True
+    gateway, prev = edge
+
+    return prev[gateway] != virus
+
+
 def solve(edges: list[tuple[str, str]]) -> list[str]:
     graph = defaultdict(set)
     for edge in edges:
@@ -57,14 +69,22 @@ def solve(edges: list[tuple[str, str]]) -> list[str]:
     result = []
 
     while True:
-        edge = get_gateway_and_prev(graph, virus)
-        if edge is None:
+        if get_gateway_and_prev(graph, virus) is None:
             break
-        gateway, prev = edge
-        p = prev[gateway]
-        result.append(f'{gateway}-{p}')
-        graph[gateway].remove(p)
-        graph[p].remove(gateway)
+
+        candidates = []
+        for v in graph.keys():
+            if v.isupper():
+                for u in graph[v]:
+                    candidates.append((v, u))
+        candidates.sort()
+
+        for v, u in candidates:
+            if is_safe(graph, virus, v, u):
+                result.append(f'{v}-{u}')
+                break
+            graph[u].add(v)
+            graph[v].add(u)
 
         edge = get_gateway_and_prev(graph, virus)
         if edge is None:
